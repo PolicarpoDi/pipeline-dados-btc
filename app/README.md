@@ -15,7 +15,7 @@ Kafka: Coleta de dados em tempo real.
 Spark: Processamento e transformação de dados.
 PostgreSQL: Armazenamento final dos dados transformados.
 Airflow: Orquestração da pipeline de dados.
-GitLab CI/CD: Automação do processo de integração contínua e entrega contínua.
+GitHub Actions CI/CD: Automação do processo de integração contínua e entrega contínua.
 Scikit-learn: Modelo de ML
 
 
