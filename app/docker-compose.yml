@@ -44,6 +44,7 @@ services:
       - AIRFLOW_HOME=/opt/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:1234@postgres/db_pipeline_btc
+      - AIRFLOW__WEBSERVER__EXPOSE_UI_API=True
     volumes:
       - ./dags:/opt/airflow/dags
     ports:
