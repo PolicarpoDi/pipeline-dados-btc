@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  # Kafka
+  kafka:
+    image: wurstmeister/kafka:latest
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=kafka://kafka:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_LISTENER_NAME=INTERNAL
+      - KAFKA_LISTENER_PORT=9093
+      - KAFKA_LISTENER_INTERNAL_PORT=9093
+      - KAFKA_LISTENER=INTERNAL
+      - KAFKA_LISTENER_INTER_BROKER_PROTOCOL=PLAINTEXT
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_NAME_EXTERNAL=EXTERNAL
+      - KAFKA_ADVERTISED_LISTENERS=EXTERNAL://kafka:9093
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+
+  # Zookeeper
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+    ports:
+      - "2181:2181"
+
+  # PostgreSQL
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=db_pipeline_btc
+    ports:
+      - "5432:5432"
+
+  # Airflow
+  airflow:
+    image: apache/airflow:2.2.2
+    environment:
+      - AIRFLOW_HOME=/opt/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:1234@postgres/db_pipeline_btc
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - kafka
+
+  # Spark (usando imagem oficial do Spark)
+  spark:
+    image: bitnami/spark:3.1.1
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
