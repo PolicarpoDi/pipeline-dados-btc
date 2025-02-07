@@ -91,3 +91,22 @@ Dentro do container, execute os testes com:
 ```bash
 docker-compose exec airflow pytest tests/test_bitcoin_pipeline.py
 ```
+
+## 🚀 CI/CD Pipeline para Análise de Bitcoin
+Este repositório possui um pipeline automatizado de CI/CD usando GitHub Actions e Docker para garantir a qualidade e a entrega contínua do código.
+
+### 📌 Como funciona o pipeline?
+Sempre que um push ou pull request for feito na branch main, o CI/CD executa automaticamente os seguintes passos:
+
+### 1️⃣ Build
+- Constrói a imagem Docker com todas as dependências.
+- Garante que o ambiente esteja pronto para execução.
+### 2️⃣ Treino do Modelo
+- Antes de rodar os testes, o modelo de previsão do Bitcoin é treinado.
+- Isso gera os arquivos bitcoin_price_model.pkl e bitcoin_movement_model.pkl, que serão usados na predição.
+### 3️⃣ Testes Automatizados
+- O código passa por testes unitários usando Pytest e Spark.
+- Isso garante que as previsões de preço e movimentação do Bitcoin estejam corretas.
+### 4️⃣ Deploy para Produção
+- Se todos os testes passarem, o código atualizado é implantado automaticamente.
+- O comando docker-compose up -d sobe os containers e aplica as atualizações.

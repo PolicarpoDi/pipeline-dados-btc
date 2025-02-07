@@ -24,16 +24,32 @@ jobs:
       run: |
         docker-compose -f docker-compose.yml build
 
-  # Job para a etapa de Teste
-  test:
+  train:
     runs-on: ubuntu-latest
-    needs: build  # O job de testes depende do job de build
+    needs: build 
 
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
 
     - name: Instalar dependências
+      run: |
+        docker-compose run --rm airflow pip install -r requirements.txt
+
+    - name: Treinar o modelo
+      run: |
+        docker-compose run --rm airflow python app/train_model.py 
+
+  # Job para a etapa de Teste
+  test:
+    runs-on: ubuntu-latest
+    needs: train
+
+    steps:
+    - name: Checar o código
+      uses: actions/checkout@v2
+
+    - name: Rodar os testes
       run: |
         docker-compose run --rm airflow pip install -r requirements.txt
 
@@ -44,7 +60,7 @@ jobs:
   # Job para a etapa de Deploy
   deploy:
     runs-on: ubuntu-latest
-    needs: test  # O job de deploy depende do job de teste
+    needs: test 
 
     steps:
     - name: Checar o código
@@ -52,4 +68,4 @@ jobs:
 
     - name: Deploy para produção
       run: |
-        docker-compose up -d  # Subindo os containers em modo detached
+        docker-compose up -d
