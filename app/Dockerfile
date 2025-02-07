@@ -1,28 +1,35 @@
 # Usando a imagem oficial do Python
-FROM python:3.13
+FROM python:3.10
+
+# Definindo o diretório de trabalho
+WORKDIR /app
 
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \
     libpq-dev \
+    graphviz \
     curl \
     gnupg \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar o Apache Kafka, Spark e PostgreSQL via Docker
-# Kafka, Spark e PostgreSQL serão configurados via docker-compose.yml
-
-# Instalando as bibliotecas Python necessárias
+# Copiar e instalar dependências antes do código-fonte (para cache otimizado)
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Definindo o diretório de trabalho
-WORKDIR /app
+# Instalar graphviz Python library
+RUN pip install graphviz
 
 # Copiar o código do projeto para dentro do container
 COPY . /app
 
-# Comando para iniciar o Airflow (caso o Airflow esteja sendo usado)
-CMD ["airflow", "webserver", "--port", "8080"]
+# Definir o PYTHONPATH para incluir a pasta 'app'
+ENV PYTHONPATH="/app:${PYTHONPATH}"
+
+# Dar permissão de execução
+RUN chmod +x /app/entrypoint.sh
+
+# Definir o entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]

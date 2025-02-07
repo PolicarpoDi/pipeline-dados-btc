@@ -1,21 +1,80 @@
-# Projeto de Pipeline de Dados Open-Source:
+# 🚀 Bitcoin Price Prediction Pipeline
 
-## Objetivo do Projeto:
-Criar uma pipeline de dados em um container para coleta, transformação, análise, entrega contínua de dados e uso de ML para predição. Vamos usar Apache Kafka para streaming de dados em tempo real, Apache Spark para processamento distribuído, Apache Airflow para orquestração e agendamento, PostgreSQL para armazenamento, GitLab CI/CD para automação do processo scikit-learn para criação do modelo.
+## 📖 Visão Geral
 
-Coleta dados do Bitcoin utilizando uma API.
-Processa os dados e faz a previsão usando um modelo de Machine Learning.
-Orquestra todo o processo com o Apache Airflow.
-Implementa um processo de CI/CD para automação.
+Este projeto implementa um **pipeline de dados** para analisar e prever a variação do preço do **Bitcoin (BTC)**. Utiliza tecnologias avançadas, incluindo:
 
-### 1. Arquitetura Geral
-A arquitetura geral do sistema será composta por:
+- **Apache Airflow**: Orquestração de tarefas
+- **Apache Kafka**: Processamento em tempo real
+- **Apache Spark**: Processamento distribuído de grandes volumes de dados
+- **PostgreSQL**: Armazenamento de dados históricos
+- **Machine Learning**: Modelo para prever se o preço do Bitcoin irá **subir ou cair** no dia seguinte
 
-Kafka: Coleta de dados em tempo real.
-Spark: Processamento e transformação de dados.
-PostgreSQL: Armazenamento final dos dados transformados.
-Airflow: Orquestração da pipeline de dados.
-GitHub Actions CI/CD: Automação do processo de integração contínua e entrega contínua.
-Scikit-learn: Modelo de ML
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Docker + Docker Compose** → Facilita a implantação de todos os serviços  
+- **Apache Airflow** → Agendamento e orquestração de tarefas  
+- **Apache Kafka** → Streaming de dados  
+- **Apache Spark** → Processamento de dados em larga escala  
+- **PostgreSQL** → Banco de dados relacional para armazenamento  
+- **Scikit-learn** → Modelos de Machine Learning  
+- **Joblib** → Serialização do modelo de IA  
+- **Python** → Linguagem principal do projeto  
+
+---
+
+## 🏗️ Configuração e Instalação
+
+### 📌 **Pré-requisitos**
+Antes de iniciar, certifique-se de ter instalados:
+
+- **Docker** e **Docker Compose**
+- **Python 3.10+**
+- **Git**
+
+### 📥 **1. Clone o Repositório**
+
+```bash
+git clone https://github.com/seuusuario/bitcoin-pipeline.git
+cd bitcoin-pipeline
+```
+
+🐍 2. Instale as Dependências do Python
+bash
+Copiar
+Editar
+pip install -r requirements.txt
+🚀 3. Suba os Serviços com Docker Compose
+bash
+Copiar
+Editar
+docker-compose up -d
+🎯 4. Acesse os Serviços
+Airflow Web UI: http://localhost:8080
+Kafka UI (Kafdrop): http://localhost:9000
+
+📊 Modelo de Machine Learning
+Tipo: Classificação Binária (Subida ou Queda)
+Modelo: LogisticRegression
+Entrada: Preço do Bitcoin nos últimos dias
+Saída: 1 (Subida) ou 0 (Queda)
+Métrica de Avaliação: Acurácia
 
 
+## Rodando o teste
+Dentro do container, execute os testes com:
+```bash
+docker-compose exec airflow pytest tests/test_bitcoin_pipeline.py
+```
+
+Adicionar na rede manualmente
+                                                                                                   
+docker network connect my_network kafka
+docker network connect my_network kafdrop
+docker network connect my_network postgres
+docker network connect my_network airflow
+docker network connect my_network spark-master
+docker network connect my_network spark-worker
+docker network connect my_network zookeeper

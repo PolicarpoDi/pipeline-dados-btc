@@ -7,7 +7,7 @@ from app.bitcoin_pipeline import get_bitcoin_data, train_model
 def test_get_bitcoin_data():
     # Teste que verifica se os dados retornados são um Dataframe
     data = get_bitcoin_data()
-    assert isinstance(data, pd.Dataframe)
+    assert isinstance(data, pd.DataFrame)
     assert 'timestamp' in data.columns
     assert 'price' in data.columns
     
