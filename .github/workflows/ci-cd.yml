@@ -15,8 +15,11 @@ jobs:
     - name: Instalar Docker e Docker Compose
       run: |
         sudo apt-get update
-        sudo apt-get install -y docker.io docker-compose-plugin
-        docker compose version || docker-compose version
+        sudo apt-get install -y docker.io
+        DOCKER_COMPOSE_VERSION=2.22.0
+        sudo curl -L "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
 
   build:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
     - name: Construir a imagem Docker
       run: |
         cd app/
-        docker compose -f docker-compose.yml build
+        docker-compose -f docker-compose.yml build
 
   train:
     runs-on: ubuntu-latest
