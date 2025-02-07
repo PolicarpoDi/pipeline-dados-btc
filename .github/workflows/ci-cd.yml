@@ -11,31 +11,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    container:
+      image: docker:latest
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
-
-    - name: Verificar versão do Docker Compose
-      run: |
-        docker compose version || docker-compose version || echo "Docker Compose não encontrado"
-
-    - name: Instalar Docker Compose (se necessário)
-      run: |
-        if ! command -v docker compose &>/dev/null && ! command -v docker-compose &>/dev/null; then
-          echo "Instalando Docker Compose..."
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-        fi
 
     - name: Construir a imagem Docker
       run: |
         cd app/
         docker compose -f docker-compose.yml build
 
-  # Job para a etapa de Treinamento
   train:
     runs-on: ubuntu-latest
+    container:
+      image: docker:latest
     needs: build
     steps:
     - name: Checar o código
@@ -63,9 +53,10 @@ jobs:
         cd app/
         docker-compose run --rm airflow venv/bin/python train_model.py
 
-  # Job para a etapa de Teste
   test:
     runs-on: ubuntu-latest
+    container:
+      image: docker:latest
     needs: train
     steps:
     - name: Checar o código
@@ -84,9 +75,10 @@ jobs:
         cd app/
         docker-compose run --rm airflow venv/bin/pytest tests/test_bitcoin_pipeline.py
 
-  # Job para a etapa de Deploy
   deploy:
     runs-on: ubuntu-latest
+    container:
+      image: docker:latest
     needs: test
     steps:
     - name: Checar o código
