@@ -1,13 +1,13 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import psycopg2
 from airflow import DAG
 from airflow.hooks.base_hook import BaseHook
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from bitcoin_pipeline import (get_bitcoin_data, kafka_producer, predict_price,
-                              train_model)
+from bitcoin_pipeline import (get_bitcoin_data, kafka_producer,
+                              predict_price_and_movement, train_model)
 from kafka import KafkaProducer
 
 # Definindo os argumentos padrão
@@ -44,7 +44,6 @@ def collect_bitcoin_data(**kwargs):
 collect_data_task = PythonOperator(
     task_id='collect_bitcoin_data',
     python_callable=collect_bitcoin_data,
-    provide_context=True,
     dag=dag,
 )
 
@@ -57,24 +56,21 @@ def train_bitcoin_model(**kwargs):
 train_model_task = PythonOperator(
     task_id='train_bitcoin_model',
     python_callable=train_bitcoin_model,
-    provide_context=True,
     dag=dag,
 )
 
 # Tarefa 3: Previsão de preço do Bitcoin
 def predict_bitcoin_price(**kwargs):
-    prediction = predict_price()
-    if prediction is None:
+    predicted_price, movement_label = predict_price_and_movement()
+    if predicted_price is None:
         raise ValueError("Erro: Previsão retornou None")
     
-    print(f"💲 Preço previsto para o próximo dia: {prediction}")
-    kwargs['ti'].xcom_push(key='predicted_price', value=prediction)
-    return prediction
+    print(f"💲 Preço previsto: {predicted_price}, Movimento: {movement_label}")
+    kwargs['ti'].xcom_push(key='predicted_data', value=(predicted_price, movement_label))
 
-predict_price_task = PythonOperator(
-    task_id='predict_bitcoin_price',
+predicted_price_and_movement_task = PythonOperator(
+    task_id='predicted_bitcoin_price_and_movement',
     python_callable=predict_bitcoin_price,
-    provide_context=True,
     dag=dag,
 )
 
@@ -99,57 +95,70 @@ test_kafka_task = PythonOperator(
 
 # Tarefa 5: Inserir previsão no banco de dados
 def insert_prediction_to_db(**kwargs):
-    predicted_price = kwargs['ti'].xcom_pull(task_ids='predict_bitcoin_price', key='predicted_price')
-    if not predicted_price:
-        raise ValueError("Erro: Nenhuma previsão foi encontrada para armazenar no banco de dados.")
+    ti = kwargs.get('ti')
+    if not ti:
+        raise ValueError("Erro: Task Instance (ti) não foi passada corretamente.")
+
+    # Recupera os dados do XCom
+    predicted_data = ti.xcom_pull(task_ids='predicted_bitcoin_price_and_movement', key='predicted_data')
+
+    print(f"🔍 Dados recuperados do XCom: {predicted_data}")
+
+    if not predicted_data or not isinstance(predicted_data, (list, tuple)) or len(predicted_data) != 2:
+        raise ValueError("Erro: Dados de previsão ausentes ou inválidos.")
+
+    predicted_price, movement_label = predicted_data
 
     # Obtendo a data de previsão
-    prediction_date = datetime.now()
+    prediction_date = datetime.now(timezone.utc) - timedelta(hours=3)
 
     # Conectando ao PostgreSQL
-    postgres_hook = PostgresHook(postgres_conn_id='Postgres')
-    conn = postgres_hook.get_conn()
-    cursor = conn.cursor()
+    try:
+        postgres_hook = PostgresHook(postgres_conn_id='Postgres')
+        with postgres_hook.get_conn() as conn:
+            with conn.cursor() as cursor:
+                # Inserção da previsão do preço
+                cursor.execute("""
+                    INSERT INTO predict_btc.bitcoin_predictions (prediction_date, predicted_price)
+                    VALUES (%s, %s);
+                """, (prediction_date, predicted_price))
 
-    # Comando para inserir a previsão
-    insert_query = """
-    INSERT INTO predict_btc.bitcoin_predictions (prediction_date, predicted_price)
-    VALUES (%s, %s);
-    """
-    
-    cursor.execute(insert_query, (prediction_date, predicted_price))
-    conn.commit()
+                # Inserção do movimento previsto
+                cursor.execute("""
+                    INSERT INTO predict_btc.btc_movements (timestamp, predicted_movement)
+                    VALUES (%s, %s);
+                """, (prediction_date, movement_label))
 
-    # Fechar conexão
-    cursor.close()
-    conn.close()
+                conn.commit()
 
-    print(f"✅ Previsão inserida no banco de dados: {predicted_price}")
+        print(f"✅ Previsões inseridas no banco de dados: Preço {predicted_price}, Movimento {movement_label}")
+
+    except Exception as e:
+        print(f"❌ Erro ao inserir no banco de dados: {e}")
+        raise
     
 insert_to_db_task = PythonOperator(
     task_id='insert_prediction_to_db',
     python_callable=insert_prediction_to_db,
-    provide_context=True,
     dag=dag,
 )
     
 # Tarefa 6: Enviar previsão para o Kafka
 def send_to_kafka(**kwargs):
-    predicted_price = kwargs['ti'].xcom_pull(task_ids='predict_bitcoin_price', key='predicted_price')
+    predicted_price, movement_label = kwargs['ti'].xcom_pull(task_ids='predicted_bitcoin_price_and_movement', key='predicted_data')
     
     if not predicted_price:
         raise ValueError("Erro: Nenhuma previsão foi encontrada para enviar ao Kafka.")
 
-    kafka_producer(predicted_price)
+    kafka_producer({"predicted_price": predicted_price, "predicted_movement": movement_label})
     #print(f"✅ Previsão enviada para o Kafka: {predicted_price}")
 
 send_to_kafka_task = PythonOperator(
     task_id='send_to_kafka',
     python_callable=send_to_kafka,
-    provide_context=True,
     dag=dag,
 )
 
 # Definindo a ordem das tarefas
 
-collect_data_task >> train_model_task >> predict_price_task >> test_kafka_task >> insert_to_db_task >> send_to_kafka_task
+collect_data_task >> train_model_task >> predicted_price_and_movement_task >> test_kafka_task >> insert_to_db_task >> send_to_kafka_task

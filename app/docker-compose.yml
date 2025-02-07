@@ -79,7 +79,6 @@ services:
       - AIRFLOW__WEBSERVER__EXPOSE_UI_API=True
     volumes:
       - ./dags:/opt/airflow/dags 
-      - ./airflow_db:/opt/airflow/db  # Volume persistente para o banco de dados do Airflow
     ports:
       - "8080:8080"
     depends_on:

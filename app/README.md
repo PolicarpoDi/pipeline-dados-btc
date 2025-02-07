@@ -37,40 +37,23 @@ Antes de iniciar, certifique-se de ter instalados:
 ### 📥 **1. Clone o Repositório**
 
 ```bash
-git clone https://github.com/seuusuario/bitcoin-pipeline.git
-cd bitcoin-pipeline
+git clone https://github.com/PolicarpoDi/pipeline-dados-btc
+cd bitcoin-pipeline/app/
 ```
 
-🐍 2. Instale as Dependências do Python
-bash
-Copiar
-Editar
-pip install -r requirements.txt
-🚀 3. Suba os Serviços com Docker Compose
-bash
-Copiar
-Editar
-docker-compose up -d
-🎯 4. Acesse os Serviços
-Airflow Web UI: http://localhost:8080
-Kafka UI (Kafdrop): http://localhost:9000
-
-📊 Modelo de Machine Learning
-Tipo: Classificação Binária (Subida ou Queda)
-Modelo: LogisticRegression
-Entrada: Preço do Bitcoin nos últimos dias
-Saída: 1 (Subida) ou 0 (Queda)
-Métrica de Avaliação: Acurácia
-
-
-## Rodando o teste
-Dentro do container, execute os testes com:
+## 🐍 2. Instale as Dependências do Python
 ```bash
-docker-compose exec airflow pytest tests/test_bitcoin_pipeline.py
+pip install -r requirements.txt
 ```
 
-Adicionar na rede manualmente
-                                                                                                   
+## 🚀 3. Suba os Serviços com Docker Compose
+```bash
+docker-compose up -d
+```
+
+## 🌐 4. Configuração da rede do container
+Os Serviços não estão sendo setados na rede configurada no Compose, portanto, é necessário setar manualmente com o seguinte comando 
+```bash
 docker network connect my_network kafka
 docker network connect my_network kafdrop
 docker network connect my_network postgres
@@ -78,3 +61,22 @@ docker network connect my_network airflow
 docker network connect my_network spark-master
 docker network connect my_network spark-worker
 docker network connect my_network zookeeper
+```
+
+## 🎯 5. Acesse os Serviços
+Airflow Web UI: http://localhost:8080
+Kafka UI (Kafdrop): http://localhost:9000
+
+## 📊 Modelo de Machine Learning Utilizado
+- Tipo: Classificação Binária (Subida ou Queda)
+- Modelo: LogisticRegression
+- Entrada: Preço do Bitcoin nos últimos dias
+- Saída: 1 (Subida) ou 0 (Queda)
+- Métrica de Avaliação: Acurácia
+
+
+## 🔍 Rodando os testes
+Dentro do container, execute os testes com:
+```bash
+docker-compose exec airflow pytest tests/test_bitcoin_pipeline.py
+```
