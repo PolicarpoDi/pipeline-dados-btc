@@ -10,6 +10,7 @@ on:
 
 jobs:
   
+  # Job para a etapa de Build
   build:
     runs-on: ubuntu-latest
 
@@ -34,55 +35,111 @@ jobs:
   # Job para a etapa de Treinamento
   train:
     runs-on: ubuntu-latest
-    needs: build 
-
+    needs: build  # O job de treinamento depende do job de build
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
 
-    - name: Instalar Docker Compose
+    - name: Verificar instalação do Docker Compose
       run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version  # Verifica se o docker-compose foi instalado corretamente
+        if ! command -v docker-compose &>/dev/null; then
+          echo "Docker Compose não encontrado, instalando..."
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        fi
 
-    - name: Treinamento do Modelo
+    - name: Configurar o ambiente virtual
       run: |
+        # Verifica se o ambiente virtual já foi cacheado
+        if [ ! -d "venv" ]; then
+          # Instalar virtualenv, caso não esteja instalado
+          python3 -m pip install --upgrade pip
+          python3 -m pip install virtualenv
+
+          # Criar e ativar o ambiente virtual
+          python3 -m venv venv
+        fi
+
+        # Ativar o ambiente virtual
+        source venv/bin/activate
+
+        # Instalar dependências no ambiente virtual
+        pip install -r app/requirements.txt
+
+        # Rodar o script de treinamento
         cd app/
-        docker-compose run --rm airflow python train_model.py  # Comando para rodar o script de treinamento
+        docker-compose run --rm airflow python train_model.py
 
   # Job para a etapa de Teste
   test:
     runs-on: ubuntu-latest
-    needs: train
+    needs: train  # O job de teste depende do job de treinamento
 
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
 
-    - name: Instalar Docker Compose
+    - name: Verificar instalação do Docker Compose
       run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version  # Verifica se o docker-compose foi instalado corretamente
+        if ! command -v docker-compose &>/dev/null; then
+          echo "Docker Compose não encontrado, instalando..."
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        fi
 
-    - name: Instalar dependências
+    - name: Reutilizar ambiente virtual e instalar dependências
       run: |
-        docker-compose run --rm airflow pip install -r requirements.txt
+        if [ -d "venv" ]; then
+          # Ativar o ambiente virtual
+          source venv/bin/activate
+        else
+          echo "O ambiente virtual não foi encontrado. Instalando dependências."
+          python3 -m pip install --upgrade pip
+          python3 -m pip install virtualenv
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r app/requirements.txt
+        fi
 
     - name: Rodar os testes
       run: |
+        # Rodar os testes dentro do ambiente virtual
+        cd app/
         docker-compose run --rm airflow pytest tests/test_bitcoin_pipeline.py
 
   # Job para a etapa de Deploy
   deploy:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test  # O job de deploy depende do job de teste
 
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
 
-    - name: Deploy para produção
+    - name: Verificar instalação do Docker Compose
       run: |
+        if ! command -v docker-compose &>/dev/null; then
+          echo "Docker Compose não encontrado, instalando..."
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        fi
+
+    - name: Reutilizar ambiente virtual e Deploy para produção
+      run: |
+        if [ -d "venv" ]; then
+          # Ativar o ambiente virtual
+          source venv/bin/activate
+        else
+          echo "O ambiente virtual não foi encontrado. Instalando dependências."
+          python3 -m pip install --upgrade pip
+          python3 -m pip install virtualenv
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r app/requirements.txt
+        fi
+
+        # Rodar o deploy no ambiente virtual
         docker-compose up -d
