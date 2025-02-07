@@ -22,7 +22,7 @@ jobs:
 
     - name: Construir a imagem Docker
       run: |
-        cd app
+        cd app/
         docker-compose -f docker-compose.yml build
 
   train:
@@ -35,13 +35,13 @@ jobs:
 
     - name: Instalar dependências
       run: |
-        cd app
+        cd app/
         docker-compose run --rm airflow pip install -r requirements.txt
 
     - name: Treinar o modelo
       run: |
-        cd app
-        docker-compose run --rm airflow python app/train_model.py 
+        cd app/
+        docker-compose run --rm airflow python train_model.py 
 
   # Job para a etapa de Teste
   test:
@@ -54,12 +54,12 @@ jobs:
 
     - name: Rodar os testes
       run: |
-        cd app
+        cd app/
         docker-compose run --rm airflow pip install -r requirements.txt
 
     - name: Rodar os testes
       run: |
-        cd app
+        cd app/
         docker-compose run --rm airflow pytest tests/test_bitcoin_pipeline.py
 
   # Job para a etapa de Deploy
@@ -73,5 +73,5 @@ jobs:
 
     - name: Deploy para produção
       run: |
-        cd app
+        cd app/
         docker-compose up -d
