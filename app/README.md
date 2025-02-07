@@ -2,7 +2,7 @@
 
 ## 📖 Visão Geral
 
-Este projeto implementa um **pipeline de dados** para analisar e prever a variação do preço do **Bitcoin (BTC)**. Utiliza tecnologias avançadas, incluindo:
+Este projeto implementa um **pipeline de dados** para analisar e prever a variação do preço e a tendencia de subida ou descida do **Bitcoin (BTC)** para o próximo dia. Utiliza tecnologias avançadas, incluindo:
 
 - **Apache Airflow**: Orquestração de tarefas
 - **Apache Kafka**: Processamento em tempo real
@@ -42,8 +42,14 @@ cd bitcoin-pipeline/app/
 ```
 
 ## 🐍 2. Instale as Dependências do Python
+### ✅ 2.1 Crie o ambiente virtual (utilizando _Virtualenv_)
 ```bash
-pip install -r requirements.txt
+virtualenv venv
+```
+
+### ✅2.2 Ative o ambiente virtual
+```bash
+Source venv/bin/active
 ```
 
 ## 🚀 3. Suba os Serviços com Docker Compose
@@ -64,16 +70,21 @@ docker network connect my_network zookeeper
 ```
 
 ## 🎯 5. Acesse os Serviços
-Airflow Web UI: http://localhost:8080
-Kafka UI (Kafdrop): http://localhost:9000
+- Airflow Web UI: http://localhost:8080
+- Kafka UI (Kafdrop): http://localhost:9000
 
-## 📊 Modelo de Machine Learning Utilizado
+## 📊 Modelos de Machine Learning Utilizados
+### 🔢 LogisticRegression
 - Tipo: Classificação Binária (Subida ou Queda)
-- Modelo: LogisticRegression
 - Entrada: Preço do Bitcoin nos últimos dias
 - Saída: 1 (Subida) ou 0 (Queda)
 - Métrica de Avaliação: Acurácia
 
+### 📉 LinearRegression
+- Tipo: Regressão (Prever preço do BTC no próximo dia)
+- Entrada: Preço do Bitcoin nos últimos dias
+- Saída: Preço do Bitcoin no próximo dia
+- Métrica de Avaliação: Erro Quadrático Médio (MSE) 
 
 ## 🔍 Rodando os testes
 Dentro do container, execute os testes com:

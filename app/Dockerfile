@@ -7,6 +7,7 @@ WORKDIR /app
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
+    openjdk-17-jdk \
     gcc \
     libpq-dev \
     graphviz \
@@ -14,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     git \
     && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
 # Copiar e instalar dependências antes do código-fonte (para cache otimizado)
 COPY requirements.txt /app/requirements.txt

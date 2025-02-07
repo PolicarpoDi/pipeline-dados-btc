@@ -1,9 +1,6 @@
-import time
 from datetime import datetime, timedelta, timezone
 
-import psycopg2
 from airflow import DAG
-from airflow.hooks.base_hook import BaseHook
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from bitcoin_pipeline import (get_bitcoin_data, kafka_producer,
@@ -32,13 +29,15 @@ dag = DAG(
 
 # Tarefa 1: Coleta de dados do Bitcoin
 def collect_bitcoin_data(**kwargs):
-    data = get_bitcoin_data()
-    if data is None or data.empty:
+    data = get_bitcoin_data()  # Usando o Spark para coleta de dados
+    
+    if data is None or data.count() == 0:  # Verificando o Spark DataFrame
         raise ValueError("Erro: Nenhum dado foi coletado da API.")
     
-    print("✅ Dados coletados do Bitcoin:", data.head())
+    print("✅ Dados coletados do Bitcoin:", data.show(5))  # Exibe os 5 primeiros dados do Spark DataFrame
     # Armazena o DataFrame para ser usado por outras tarefas
-    kwargs['ti'].xcom_push(key='bitcoin_data', value=data.to_json())
+    kwargs['ti'].xcom_push(key='bitcoin_data', value=data.toJSON().collect())  # Convertendo para JSON
+    
     return "Coleta de dados concluída"
 
 collect_data_task = PythonOperator(
