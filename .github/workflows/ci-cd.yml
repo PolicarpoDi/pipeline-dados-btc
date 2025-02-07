@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  # Job para a etapa de Build
+  
   build:
     runs-on: ubuntu-latest
 
@@ -24,13 +24,14 @@ jobs:
       run: |
         sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version 
+        docker-compose --version  # Verifica se o docker-compose foi instalado corretamente
 
     - name: Construir a imagem Docker
       run: |
         cd app/
         docker-compose -f docker-compose.yml build
 
+  # Job para a etapa de Treinamento
   train:
     runs-on: ubuntu-latest
     needs: build 
@@ -39,39 +40,44 @@ jobs:
     - name: Checar o código
       uses: actions/checkout@v2
 
-    - name: Instalar dependências
+    - name: Instalar Docker Compose
       run: |
-        cd app/
-        docker-compose run --rm airflow pip install -r requirements.txt
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version  # Verifica se o docker-compose foi instalado corretamente
 
-    - name: Treinar o modelo
+    - name: Treinamento do Modelo
       run: |
         cd app/
-        docker-compose run --rm airflow python train_model.py 
+        docker-compose run --rm airflow python train_model.py  # Comando para rodar o script de treinamento
 
   # Job para a etapa de Teste
   test:
     runs-on: ubuntu-latest
-    needs: train
+    needs: build
 
     steps:
     - name: Checar o código
       uses: actions/checkout@v2
 
-    - name: Rodar os testes
+    - name: Instalar Docker Compose
       run: |
-        cd app/
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version  # Verifica se o docker-compose foi instalado corretamente
+
+    - name: Instalar dependências
+      run: |
         docker-compose run --rm airflow pip install -r requirements.txt
 
     - name: Rodar os testes
       run: |
-        cd app/
         docker-compose run --rm airflow pytest tests/test_bitcoin_pipeline.py
 
   # Job para a etapa de Deploy
   deploy:
     runs-on: ubuntu-latest
-    needs: test 
+    needs: test
 
     steps:
     - name: Checar o código
@@ -79,5 +85,4 @@ jobs:
 
     - name: Deploy para produção
       run: |
-        cd app/
         docker-compose up -d
