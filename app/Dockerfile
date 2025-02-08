@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     git \
+    hadoop-lzo \
     && rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
