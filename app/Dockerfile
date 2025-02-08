@@ -5,18 +5,22 @@ FROM python:3.10
 WORKDIR /app
 
 # Instala dependências do sistema
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
     default-libmysqlclient-dev \
-    openjdk-11-jdk \
     gcc \
     libpq-dev \
     graphviz \
     curl \
     gnupg \
     git \
+    && add-apt-repository ppa:openjdk-r/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-11-jdk \
     && rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Copiar e instalar dependências antes do código-fonte (para cache otimizado)
 COPY requirements.txt /app/requirements.txt
