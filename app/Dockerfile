@@ -36,3 +36,4 @@ RUN chmod +x /app/entrypoint.sh
 
 # Definir o entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
+
