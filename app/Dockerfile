@@ -7,7 +7,7 @@ WORKDIR /app
 # Instalar dependências do sistema (incluindo LZO e Maven)
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
-    openjdk-11-jdk \
+    openjdk-17-jdk \
     gcc \
     libpq-dev \
     graphviz \
@@ -31,7 +31,7 @@ RUN wget https://github.com/twitter/hadoop-lzo/releases/download/v0.4.20/hadoop-
     && mv hadoop-lzo-0.4.20.jar /usr/lib/hadoop/lib/
 
 # Configurar variáveis de ambiente para o Java 11 e Hadoop-LZO
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV HADOOP_CLASSPATH=/usr/lib/hadoop/lib/hadoop-lzo-0.4.20.jar
 ENV JAVA_LIBRARY_PATH=/usr/lib/hadoop/lib
 
