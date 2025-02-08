@@ -14,8 +14,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     git \
-    hadoop-lzo \
     && rm -rf /var/lib/apt/lists/*
+
+# Adicionar repositório Hadoop e instalar hadoop-lzo
+RUN apt-get update && apt-get install -y \
+    wget \
+    && wget https://github.com/twitter/hadoop-lzo/releases/download/v0.4.20/hadoop-lzo-0.4.20.jar \
+    && mv hadoop-lzo-0.4.20.jar /usr/lib/hadoop/lib/
 
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
