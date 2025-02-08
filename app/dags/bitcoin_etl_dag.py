@@ -158,6 +158,7 @@ send_to_kafka_task = PythonOperator(
     dag=dag,
 )
 
+
 # Definindo a ordem das tarefas
 
 collect_data_task >> train_model_task >> predicted_price_and_movement_task >> test_kafka_task >> insert_to_db_task >> send_to_kafka_task
