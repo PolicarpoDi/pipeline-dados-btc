@@ -1,13 +1,15 @@
-# Usando a imagem oficial do Python
-FROM python:3.10
+# Usando a imagem oficial do Java 11
+FROM openjdk:11-jdk-slim
 
 # Definindo o diretório de trabalho
 WORKDIR /app
 
-# Instala dependências do sistema
+# Instalando dependências do sistema e o Python 3.10
 RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-distutils \
+    python3-pip \
     default-libmysqlclient-dev \
-    openjdk-8-jdk \
     gcc \
     libpq-dev \
     graphviz \
@@ -16,14 +18,15 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+# Definindo o JAVA_HOME para Java 11
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
-# Copiar e instalar dependências antes do código-fonte (para cache otimizado)
+# Copiar o arquivo de requisitos antes do código-fonte para otimizar o cache
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
-# Instalar graphviz Python library
-RUN pip install graphviz
+# Instalar a biblioteca Graphviz do Python
+RUN pip3 install graphviz
 
 # Copiar o código do projeto para dentro do container
 COPY . /app
@@ -31,9 +34,8 @@ COPY . /app
 # Definir o PYTHONPATH para incluir a pasta 'app'
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
-# Dar permissão de execução
+# Dar permissão de execução ao script de entrada
 RUN chmod +x /app/entrypoint.sh
 
 # Definir o entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
-
